@@ -64,10 +64,9 @@ class APIAgent_step():
 
     def __init__(self, model_name, time, functions, temperature=0.001, top_p=1, max_tokens=1000, language="zh") -> None:
         self.model_name = model_name.lower()
-        
         if "gpt" in self.model_name:
-            api_key = os.getenv("GPT_AGENT_API_KEY")
-            base_url = os.getenv("GPT_AGENT_BASE_URL")
+            api_key = os.getenv("GPT_AGENT_API_KEY") or os.getenv("GPT_API_KEY")
+            base_url = os.getenv("GPT_AGENT_BASE_URL") or os.getenv("GPT_BASE_URL")
         elif "deepseek" in self.model_name:
             api_key = os.getenv("DEEPSEEK_API_KEY")
             base_url = os.getenv("DEEPSEEK_BASE_URL")
@@ -78,7 +77,15 @@ class APIAgent_step():
             api_key = os.getenv("KIMI_API_KEY")
             base_url = os.getenv("KIMI_BASE_URL")
         else:
-            raise ValueError(f"Unknown model name: {self.model_name}")
+            api_key = None
+            base_url = None
+
+        api_key = api_key or os.getenv("ACEBENCH_API_KEY") or os.getenv("OPENAI_API_KEY")
+        base_url = base_url or os.getenv("ACEBENCH_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+        if not api_key:
+            raise ValueError(f"Unknown model name and no fallback API key: {self.model_name}")
+        if not base_url:
+            raise ValueError(f"Unknown model name and no fallback base URL: {self.model_name}")
 
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.temperature = temperature
@@ -87,6 +94,7 @@ class APIAgent_step():
         self.time = time
         self.functions = functions
         self.language = language
+        self.request_model_name = os.getenv("ACEBENCH_MODEL_ID") or model_name
 
 
     def respond(self, history) -> None:
@@ -99,7 +107,7 @@ class APIAgent_step():
             system_prompt = MULTI_TURN_AGENT_PROMPT_SYSTEM_EN.format(time = self.time)
             user_prompt = MULTI_TURN_AGENT_PROMPT_USER_EN.format(functions = self.functions, history = history)
 
-        if "o1" not in self.model_name:
+        if "o1" not in self.request_model_name.lower():
             message = [
                 {
                     "role": "system",
@@ -113,7 +121,7 @@ class APIAgent_step():
 
             response = self.client.chat.completions.create(
                 messages=message,
-                model=self.model_name,
+                model=self.request_model_name,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
@@ -126,7 +134,7 @@ class APIAgent_step():
             }]
             response = self.client.chat.completions.create(
                 messages=message,
-                model=self.model_name,
+                model=self.request_model_name,
             )
             response = response.choices[0].message.content
             

@@ -34,18 +34,33 @@ class APIModelInference(BaseHandler):
 
         load_dotenv()
 
-        if "gpt" in self.model_name:
-            api_key = os.getenv("GPT_AGENT_API_KEY")
-            base_url = os.getenv("GPT_BASE_URL")
-        elif "deepseek-r1" in self.model_name:
+        lowered_model_name = str(self.model_name).lower()
+        if "gpt" in lowered_model_name:
+            api_key = os.getenv("GPT_AGENT_API_KEY") or os.getenv("GPT_API_KEY")
+            base_url = os.getenv("GPT_BASE_URL") or os.getenv("GPT_AGENT_BASE_URL")
+        elif "deepseek" in lowered_model_name:
             api_key = os.getenv("DEEPSEEK_API_KEY")
             base_url = os.getenv("DEEPSEEK_BASE_URL")
-        elif "o1" in self.model_name:
-            api_key = os.getenv("GPT_AGENT_API_KEY")
-            base_url = os.getenv("GPT_BASE_URL")
-            
+        elif "qwen" in lowered_model_name:
+            api_key = os.getenv("QWEN_API_KEY")
+            base_url = os.getenv("QWEN_BASE_URL")
+        elif "kimi" in lowered_model_name:
+            api_key = os.getenv("KIMI_API_KEY")
+            base_url = os.getenv("KIMI_BASE_URL")
+        else:
+            api_key = None
+            base_url = None
+
+        api_key = api_key or os.getenv("ACEBENCH_API_KEY") or os.getenv("OPENAI_API_KEY")
+        base_url = base_url or os.getenv("ACEBENCH_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+        if not api_key:
+            raise ValueError("API key is not configured for APIModelInference")
+        if not base_url:
+            raise ValueError("Base URL is not configured for APIModelInference")
+
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.model_name = model_name
+        self.request_model_name = os.getenv("ACEBENCH_MODEL_ID") or model_name
         self.max_dialog_turns = max_dialog_turns
         self.language = language
         self.user_model = user_model
@@ -105,14 +120,14 @@ class APIModelInference(BaseHandler):
             try:
                 response = self.client.chat.completions.create(
                     messages=message,
-                    model=self.model_name,
+                    model=self.request_model_name,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     top_p=self.top_p,
                 )
                 result = response.choices[0].message.content
 
-                if "deepseek-r1" in self.model_name:
+                if "deepseek-r1" in self.request_model_name.lower():
                     match = re.search(r'</think>\s*(.*)$', result, re.DOTALL)
                     result = match.group(1).strip()
                 break  # If successful, break the loop

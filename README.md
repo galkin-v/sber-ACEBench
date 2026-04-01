@@ -114,7 +114,7 @@ Large Language Models (LLMs) have demonstrated significant potential in decision
 Execute the following command to install the required dependencies for inference and evaluation:
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ---

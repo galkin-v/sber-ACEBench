@@ -1,4 +1,7 @@
-from model_inference.common_inference import CommonInference
+try:
+    from model_inference.common_inference import CommonInference
+except Exception:
+    CommonInference = None
 from model_inference.apimodel_inference import APIModelInference
 
 
@@ -33,7 +36,10 @@ inference_map_groups = {
         "claude-3-5-sonnet-20241022",
         "claude-3-haiku-20240307",
     ],
-    CommonInference: [
+}
+
+if CommonInference is not None:
+    inference_map_groups[CommonInference] = [
         "gemini-1.5-pro",
         "gemini-2.0-flash-exp",
         "qwen2.5-7b-instruct-local",
@@ -51,8 +57,7 @@ inference_map_groups = {
         "Qwen2.5-3B-Instruct-local",
         "Llama-3.2-3B-Instruct-local",
         "moonshotai/Kimi-K2-Instruct",
-    ],
-}
+    ]
 
 
 inference_map = {model: handler for handler, models in inference_map_groups.items() for model in models}

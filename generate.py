@@ -2,6 +2,7 @@
 import argparse, json, os
 from tqdm import tqdm
 from model_inference.inference_map import inference_map
+from model_inference.apimodel_inference import APIModelInference
 from category import ACE_DATA_CATEGORY
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -73,7 +74,8 @@ def sort_json(file):
 def generate_singal(args, model_name, test_case):
     model_path = args.model_path 
     result_path = args.result_path
-    model_inference = inference_map[model_name](model_name, model_path, args.temperature, args.top_p, args.max_tokens, args.max_dialog_turns, args.user_model, args.language)
+    inference_handler = inference_map.get(model_name, APIModelInference)
+    model_inference = inference_handler(model_name, model_path, args.temperature, args.top_p, args.max_tokens, args.max_dialog_turns, args.user_model, args.language)
 
     if "agent" in test_case["id"]:
         id, question, functions = (

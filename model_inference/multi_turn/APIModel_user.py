@@ -92,10 +92,19 @@ class APIUSER():
             api_key = os.getenv("KIMI_API_KEY")
             base_url = os.getenv("KIMI_BASE_URL")
         else:
-            raise ValueError(f"Unknown model name: {self.model_name}")
+            api_key = None
+            base_url = None
+
+        api_key = api_key or os.getenv("ACEBENCH_API_KEY") or os.getenv("OPENAI_API_KEY")
+        base_url = base_url or os.getenv("ACEBENCH_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+        if not api_key:
+            raise ValueError(f"Unknown model name and no fallback API key: {self.model_name}")
+        if not base_url:
+            raise ValueError(f"Unknown model name and no fallback base URL: {self.model_name}")
             
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.model_name = model_name
+        self.request_model_name = os.getenv("ACEBENCH_USER_MODEL_ID") or model_name
         self.temperature = temperature
         self.top_p = top_p
         self.max_tokens = max_tokens
@@ -137,7 +146,7 @@ class APIUSER():
 
         response = self.client.chat.completions.create(
             messages=self.messages,
-            model=self.model_name,
+            model=self.request_model_name,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,
@@ -160,7 +169,7 @@ class APIUSER():
         
         response = self.client.chat.completions.create(
             messages=self.messages,
-            model=self.model_name,
+            model=self.request_model_name,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,

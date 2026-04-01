@@ -103,7 +103,7 @@
 执行以下命令以安装推理和评估所需的依赖项:
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ---
