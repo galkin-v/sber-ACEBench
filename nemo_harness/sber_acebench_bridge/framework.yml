@@ -1,0 +1,45 @@
+framework:
+  name: sber-acebench
+  pkg_name: sber_acebench_bridge
+  full_name: sber ACEBench bridge
+  description: Wraps local sber-ACEBench provider runner for NeMo Evaluator.
+  url: https://github.com/galkin-v/sber-ACEBench
+
+defaults:
+  command: >-
+    python3 /workspace/core_evals/sber_acebench_bridge/provider_runner.py
+    --benchmark-name sber_acebench
+    --output-dir {{config.output_dir}}
+    --candidate-base-url "{{target.api_endpoint.url | replace('/chat/completions', '')}}"
+    --candidate-model-id "{{target.api_endpoint.model_id}}"
+    --candidate-api-key "{% if target.api_endpoint.get('api_key_name') is not none %}${{target.api_endpoint.get('api_key_name')}}{% elif target.api_endpoint.get('api_key') is not none %}${{target.api_endpoint.get('api_key')}}{% endif %}"
+    --parallelism {{config.params.parallelism}}
+    --request-timeout {{config.params.request_timeout}}
+    --limit-samples {{config.params.limit_samples}}
+    --request-params-json '{"temperature": {{config.params.temperature}}, "top_p": {{config.params.top_p}}, "max_tokens": {{config.params.max_new_tokens}}, "acebench_language": "{{config.params.extra.acebench_language}}", "acebench_categories": "{{config.params.extra.acebench_categories}}", "acebench_user_model": "{{config.params.extra.acebench_user_model}}"}'
+    --resume 1
+    --show-live-stats 1
+  config:
+    params:
+      temperature: 0.0
+      top_p: 1.0
+      max_new_tokens: 4096
+      parallelism: 4
+      request_timeout: 1200
+      limit_samples: -1
+      extra:
+        acebench_language: en
+        acebench_categories: test_all
+        acebench_user_model: ""
+  target:
+    api_endpoint:
+      type: chat
+
+evaluations:
+  - name: sber_acebench
+    description: sber ACEBench benchmark.
+    defaults:
+      config:
+        type: sber_acebench
+        supported_endpoint_types:
+          - chat
