@@ -3,6 +3,7 @@ from openai import OpenAI
 import os
 import re 
 import json
+from model_inference.tracing import traced_chat_completion
 
 
 MULTI_TURN_AGENT_PROMPT_SYSTEM_ZH = """你是一个AI系统，你的角色为system，请根据给定的API说明和对话历史1..t，为角色system生成在步骤t+1中生成相应的内容。
@@ -132,9 +133,12 @@ class APIAgent_step():
                 },
             ]
 
-            response = self.client.chat.completions.create(
-                messages=message,
+            response = traced_chat_completion(
+                client=self.client,
+                role="target",
                 model=self.request_model_name,
+                messages=message,
+                context={"flow": "multi_step", "step": "agent_respond"},
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
@@ -146,9 +150,12 @@ class APIAgent_step():
                 "role": "user",
                 "content": system_prompt+"\n\n"+user_prompt,
             }]
-            response = self.client.chat.completions.create(
-                messages=message,
+            response = traced_chat_completion(
+                client=self.client,
+                role="target",
                 model=self.request_model_name,
+                messages=message,
+                context={"flow": "multi_step", "step": "agent_respond_o1"},
                 extra_body=self.extra_kwargs,
             )
             response = response.choices[0].message.content

@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 import json
+from model_inference.tracing import traced_chat_completion
 
 SYSTEM_PROMPT_TRAVEL_ZH = """您是一名与agent互动的用户。
 
@@ -157,9 +158,12 @@ class APIUSER():
                     "content": "Is there anything you need help with today?",
                 }]
 
-        response = self.client.chat.completions.create(
-            messages=self.messages,
+        response = traced_chat_completion(
+            client=self.client,
+            role="user_simulator",
             model=self.request_model_name,
+            messages=self.messages,
+            context={"flow": "multi_turn", "step": "init_prompt"},
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,
@@ -181,9 +185,12 @@ class APIUSER():
 
         current_message = {}
         
-        response = self.client.chat.completions.create(
-            messages=self.messages,
+        response = traced_chat_completion(
+            client=self.client,
+            role="user_simulator",
             model=self.request_model_name,
+            messages=self.messages,
+            context={"flow": "multi_turn", "step": "respond"},
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,

@@ -16,6 +16,7 @@ from model_inference.multi_turn.multi_turn_scene import Scene
 from model_inference.multi_step.multi_step_scene import Mulit_Step_Scene
 from model_inference.multi_step.APIModel_agent import APIAgent_step
 from model_inference.multi_step.execution_role_step import EXECUTION_STEP
+from model_inference.tracing import traced_chat_completion
 
 SAVED_CLASS = {
                 "BaseApi": ["wifi","logged_in"],
@@ -131,9 +132,12 @@ class APIModelInference(BaseHandler):
         attempt = 0
         while attempt < 6:
             try:
-                response = self.client.chat.completions.create(
-                    messages=message,
+                response = traced_chat_completion(
+                    client=self.client,
+                    role="target",
                     model=self.request_model_name,
+                    messages=message,
+                    context={"flow": "single_turn", "sample_id": id},
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     top_p=self.top_p,

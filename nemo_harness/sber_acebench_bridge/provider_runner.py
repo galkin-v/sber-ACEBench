@@ -340,6 +340,7 @@ def main() -> int:
     os.environ["ACEBENCH_BASE_URL"] = args.candidate_base_url
     os.environ["ACEBENCH_MODEL_ID"] = args.candidate_model_id
     os.environ["ACEBENCH_USER_MODEL_ID"] = user_model
+    os.environ["ACEBENCH_TRACE_DIR"] = str((output_dir / "traces").resolve())
     os.environ["ACEBENCH_EXTRA_KWARGS"] = json.dumps(
         _safe_json_mapping(request_params.get("acebench_extra_kwargs")),
         ensure_ascii=False,
