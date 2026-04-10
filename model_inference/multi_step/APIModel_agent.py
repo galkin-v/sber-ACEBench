@@ -2,6 +2,7 @@
 from openai import OpenAI
 import os
 import re 
+import json
 
 
 MULTI_TURN_AGENT_PROMPT_SYSTEM_ZH = """你是一个AI系统，你的角色为system，请根据给定的API说明和对话历史1..t，为角色system生成在步骤t+1中生成相应的内容。
@@ -95,6 +96,18 @@ class APIAgent_step():
         self.functions = functions
         self.language = language
         self.request_model_name = os.getenv("ACEBENCH_MODEL_ID") or model_name
+        self.extra_kwargs = self._load_extra_kwargs()
+
+    @staticmethod
+    def _load_extra_kwargs() -> dict:
+        raw = os.getenv("ACEBENCH_EXTRA_KWARGS", "").strip()
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
 
 
     def respond(self, history) -> None:
@@ -125,6 +138,7 @@ class APIAgent_step():
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
+                extra_body=self.extra_kwargs,
             )
             response = response.choices[0].message.content
         else:
@@ -135,6 +149,7 @@ class APIAgent_step():
             response = self.client.chat.completions.create(
                 messages=message,
                 model=self.request_model_name,
+                extra_body=self.extra_kwargs,
             )
             response = response.choices[0].message.content
             

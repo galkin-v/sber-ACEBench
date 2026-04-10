@@ -1,5 +1,6 @@
 from openai import OpenAI
 import os
+import json
 
 SYSTEM_PROMPT_TRAVEL_ZH = """您是一名与agent互动的用户。
 
@@ -111,6 +112,18 @@ class APIUSER():
         self.involved_class = involved_class
         self.messages = []
         self.language = language
+        self.extra_kwargs = self._load_extra_kwargs()
+
+    @staticmethod
+    def _load_extra_kwargs() -> dict:
+        raw = os.getenv("ACEBENCH_EXTRA_KWARGS", "").strip()
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
 
     def get_init_prompt(self,question):
 
@@ -150,6 +163,7 @@ class APIUSER():
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,
+            extra_body=self.extra_kwargs,
         )
         response = response.choices[0].message.content
         message = {"role":"system",
@@ -173,6 +187,7 @@ class APIUSER():
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             top_p=self.top_p,
+            extra_body=self.extra_kwargs,
         )
         response = response.choices[0].message.content
         self.messages.append({"role": "system", "content": response})

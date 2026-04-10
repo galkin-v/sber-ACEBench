@@ -2,6 +2,7 @@ from openai import OpenAI
 import os
 import re 
 import ast
+import json
 from model_inference.prompt_en import TRAVEL_PROMPT_EN, BASE_PROMPT_EN
 from model_inference.prompt_zh import TRAVEL_PROMPT_ZH, BASE_PROMPT_ZH
 
@@ -78,6 +79,18 @@ class APIAgent_turn():
         self.language = language
         self.model_name = model_name
         self.request_model_name = os.getenv("ACEBENCH_MODEL_ID") or model_name
+        self.extra_kwargs = self._load_extra_kwargs()
+
+    @staticmethod
+    def _load_extra_kwargs() -> dict:
+        raw = os.getenv("ACEBENCH_EXTRA_KWARGS", "").strip()
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
 
     def decode_function_list(self, result):
         func = result
@@ -229,6 +242,7 @@ class APIAgent_turn():
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 top_p=self.top_p,
+                extra_body=self.extra_kwargs,
             )
             response = response.choices[0].message.content
         else:
@@ -239,6 +253,7 @@ class APIAgent_turn():
             response = self.client.chat.completions.create(
                 messages=message,
                 model=self.request_model_name,
+                extra_body=self.extra_kwargs,
             )
             response = response.choices[0].message.content
 

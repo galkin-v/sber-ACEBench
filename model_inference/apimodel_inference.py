@@ -8,6 +8,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 import os
 import re
+import json
 from model_inference.multi_turn.APIModel_agent import APIAgent_turn
 from model_inference.multi_turn.APIModel_user import APIUSER
 from model_inference.multi_turn.execution_role import EXECUTION
@@ -64,6 +65,18 @@ class APIModelInference(BaseHandler):
         self.max_dialog_turns = max_dialog_turns
         self.language = language
         self.user_model = user_model
+        self.extra_kwargs = self._load_extra_kwargs()
+
+    @staticmethod
+    def _load_extra_kwargs() -> dict:
+        raw = os.getenv("ACEBENCH_EXTRA_KWARGS", "").strip()
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
 
 
     def inference(self, question, functions, time, profile, test_case, id):
@@ -124,6 +137,7 @@ class APIModelInference(BaseHandler):
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                     top_p=self.top_p,
+                    extra_body=self.extra_kwargs,
                 )
                 result = response.choices[0].message.content
 

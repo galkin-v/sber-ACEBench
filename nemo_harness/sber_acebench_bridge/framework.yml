@@ -16,7 +16,7 @@ defaults:
     --parallelism {{config.params.parallelism}}
     --request-timeout {{config.params.request_timeout}}
     --limit-samples {{config.params.limit_samples}}
-    --request-params-json '{"temperature": {{config.params.temperature}}, "top_p": {{config.params.top_p}}, "max_tokens": {{config.params.max_new_tokens}}, "acebench_language": "{{config.params.extra.acebench_language}}", "acebench_categories": "{{config.params.extra.acebench_categories}}", "acebench_user_model": "{{config.params.extra.acebench_user_model}}"}'
+    --request-params-json '{"temperature": {{config.params.temperature}}, "top_p": {{config.params.top_p}}, "max_tokens": {{config.params.max_new_tokens}}, "acebench_language": "{{config.params.extra.acebench_language}}", "acebench_categories": "{{config.params.extra.acebench_categories}}", "acebench_user_model": "{{config.params.extra.acebench_user_model}}", "acebench_extra_kwargs": {{config.params.extra.acebench_extra_kwargs | tojson}}}'
     --resume 1
     --show-live-stats 1
   config:
@@ -31,6 +31,7 @@ defaults:
         acebench_language: en
         acebench_categories: test_all
         acebench_user_model: ""
+        acebench_extra_kwargs: {}
   target:
     api_endpoint:
       type: chat

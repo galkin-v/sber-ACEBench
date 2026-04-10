@@ -55,6 +55,12 @@ def _safe_int(value: Any, default: int = 0) -> int:
         return default
 
 
+def _safe_json_mapping(value: Any) -> dict[str, Any]:
+    if isinstance(value, Mapping):
+        return dict(value)
+    return {}
+
+
 def _sanitize_metric_name(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]+", "_", name).strip("_").lower() or "metric"
 
@@ -334,6 +340,10 @@ def main() -> int:
     os.environ["ACEBENCH_BASE_URL"] = args.candidate_base_url
     os.environ["ACEBENCH_MODEL_ID"] = args.candidate_model_id
     os.environ["ACEBENCH_USER_MODEL_ID"] = user_model
+    os.environ["ACEBENCH_EXTRA_KWARGS"] = json.dumps(
+        _safe_json_mapping(request_params.get("acebench_extra_kwargs")),
+        ensure_ascii=False,
+    )
     os.environ["OPENAI_API_KEY"] = args.candidate_api_key
     os.environ["OPENAI_BASE_URL"] = args.candidate_base_url
 
